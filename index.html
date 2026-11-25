@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes tâches</title>
+<meta name="theme-color" content="#4f46e5">
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --text: #1d2130; --muted: #6b7080; --border: #e3e5ec;
+    --accent: #4f46e5; --accent-soft: #eef0ff; --danger: #d93838; --danger-soft: #fdecec;
+    --warn: #c27c0e; --warn-soft: #fdf4e3; --ok: #1f9d55;
+    --cours: #2f6fde; --cours-soft: #e7f0ff;
+    --perso: #c2410c; --perso-soft: #fff0e6;
+    --alt: #0f8a6a; --alt-soft: #e3f7f0;
+    --shadow: 0 1px 2px rgba(20,24,40,.06), 0 2px 8px rgba(20,24,40,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12141b; --card: #1b1e28; --text: #e8e9ef; --muted: #9a9eae; --border: #2b2f3c;
+      --accent: #8b85ff; --accent-soft: #262551; --danger: #ff6b6b; --danger-soft: #3a1f22;
+      --warn: #f0b44c; --warn-soft: #3a2e17; --ok: #4ade80;
+      --cours: #6ea2ff; --cours-soft: #1c2a45;
+      --perso: #ff9a5c; --perso-soft: #3d2617;
+      --alt: #3fd1a8; --alt-soft: #14352c;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 24px; margin: 0; letter-spacing: -.01em; }
+  .today { color: var(--muted); font-size: 14px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+  .stat {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+    box-shadow: var(--shadow); cursor: pointer; text-align: left; color: inherit; font: inherit;
+  }
+  .stat .label { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .stat .num { font-size: 26px; font-weight: 700; margin-top: 2px; }
+  .stat .sub { font-size: 12px; color: var(--muted); }
+  .stat.active { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+
+  form.add {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+    box-shadow: var(--shadow); display: grid; gap: 10px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  input[type=text], input[type=date], select, textarea {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px;
+    min-width: 0;
+  }
+  input[type=text]:focus, input[type=date]:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  #title { flex: 1 1 100%; font-size: 16px; }
+  .row > select, .row > input[type=date] { flex: 1 1 130px; }
+  textarea { width: 100%; resize: vertical; min-height: 60px; }
+  .btn {
+    background: var(--accent); color: #fff; border: 0; border-radius: 9px; padding: 9px 16px;
+    font-weight: 600; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+  .btn:hover { filter: brightness(1.08); }
+  .more-toggle { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; justify-self: start; }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 10px; align-items: center; }
+  .seg { display: inline-flex; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+  .seg button { background: none; border: 0; padding: 6px 11px; border-radius: 7px; cursor: pointer; color: var(--muted); font-size: 14px; }
+  .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  #search { flex: 1 1 160px; }
+
+  .group-title { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 18px 4px 8px; font-weight: 600; }
+  ul.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  li.task {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; box-shadow: var(--shadow);
+    border-left: 4px solid var(--c);
+  }
+  li.task.done { opacity: .55; }
+  li.task.done .t-title { text-decoration: line-through; }
+  .check {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--c); background: none; cursor: pointer;
+    margin-top: 1px; display: grid; place-items: center; padding: 0; color: #fff;
+  }
+  li.task.done .check { background: var(--c); }
+  .t-title { font-weight: 600; word-break: break-word; }
+  .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; font-size: 12.5px; }
+  .tag { padding: 1px 8px; border-radius: 999px; background: var(--soft); color: var(--c); font-weight: 600; }
+  .due { color: var(--muted); }
+  .due.late { color: var(--danger); font-weight: 600; }
+  .due.soon { color: var(--warn); font-weight: 600; }
+  .prio-high { color: var(--danger); font-weight: 600; }
+  .notes { color: var(--muted); font-size: 13.5px; margin-top: 5px; white-space: pre-wrap; word-break: break-word; }
+  .actions { display: flex; gap: 2px; }
+  .icon { background: none; border: 0; cursor: pointer; color: var(--muted); padding: 4px 6px; border-radius: 6px; font-size: 15px; }
+  .icon:hover { background: var(--bg); color: var(--text); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+  footer { margin-top: 30px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  footer .btn { font-size: 13px; padding: 7px 12px; }
+
+  dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--card); color: var(--text); padding: 16px; width: min(520px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgba(0,0,0,.4); }
+  dialog form { display: grid; gap: 10px; }
+  dialog h2 { margin: 0 0 4px; font-size: 18px; }
+
+  .cat-cours { --c: var(--cours); --soft: var(--cours-soft); }
+  .cat-perso { --c: var(--perso); --soft: var(--perso-soft); }
+  .cat-alternance { --c: var(--alt); --soft: var(--alt-soft); }
+
+  @media (max-width: 480px) {
+    .stat .num { font-size: 22px; }
+    .stat { padding: 10px; }
+    .stat .ico { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mes tâches</h1>
+    <span class="today" id="today"></span>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <form class="add" id="addForm" autocomplete="off">
+    <input type="text" id="title" placeholder="Qu'est-ce que tu as à faire ?" required>
+    <div class="row">
+      <select id="cat" aria-label="Catégorie">
+        <option value="cours">📚 Cours</option>
+        <option value="perso">🏠 Perso</option>
+        <option value="alternance">💼 Alternance</option>
+      </select>
+      <input type="date" id="due" aria-label="Échéance">
+      <select id="prio" aria-label="Priorité">
+        <option value="normal">Priorité normale</option>
+        <option value="high">Priorité haute</option>
+        <option value="low">Priorité basse</option>
+      </select>
+      <button class="btn" type="submit">Ajouter</button>
+    </div>
+    <button type="button" class="more-toggle" id="moreToggle">+ Ajouter une note</button>
+    <textarea id="notes" placeholder="Détails, liens, matière, référence…" hidden></textarea>
+  </form>
+
+  <div class="toolbar">
+    <div class="seg" id="statusSeg">
+      <button data-v="todo" class="on">À faire</button>
+      <button data-v="done">Terminées</button>
+      <button data-v="all">Toutes</button>
+    </div>
+    <input type="text" id="search" placeholder="Rechercher…">
+  </div>
+
+  <div id="list"></div>
+
+  <footer>
+    <button class="btn ghost" id="exportBtn">Exporter (sauvegarde)</button>
+    <button class="btn ghost" id="importBtn">Importer</button>
+    <button class="btn ghost" id="clearDoneBtn">Supprimer les terminées</button>
+    <input type="file" id="importFile" accept="application/json" hidden>
+  </footer>
+</div>
+
+<dialog id="editDlg">
+  <form method="dialog" id="editForm">
+    <h2>Modifier la tâche</h2>
+    <input type="text" id="eTitle" required>
+    <div class="row">
+      <select id="eCat">
+        <option value="cours">📚 Cours</option>
+        <option value="perso">🏠 Perso</option>
+        <option value="alternance">💼 Alternance</option>
+      </select>
+      <input type="date" id="eDue">
+      <select id="ePrio">
+        <option value="normal">Priorité normale</option>
+        <option value="high">Priorité haute</option>
+        <option value="low">Priorité basse</option>
+      </select>
+    </div>
+    <textarea id="eNotes" placeholder="Notes"></textarea>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost" value="cancel" formnovalidate>Annuler</button>
+      <button class="btn" value="save">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const KEY = 'mes-taches-v1';
+const CATS = {
+  cours: { label: 'Cours', icon: '📚' },
+  perso: { label: 'Perso', icon: '🏠' },
+  alternance: { label: 'Alternance', icon: '💼' },
+};
+const PRIO_RANK = { high: 0, normal: 1, low: 2 };
+
+let tasks = load();
+let filterCat = 'all';
+let filterStatus = 'todo';
+let query = '';
+let editingId = null;
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch {}
+}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function daysUntil(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  return Math.round((target - now) / 86400000);
+}
+function dueLabel(dateStr) {
+  const n = daysUntil(dateStr);
+  if (n < 0) return { text: `En retard (${-n} j)`, cls: 'late' };
+  if (n === 0) return { text: "Aujourd'hui", cls: 'soon' };
+  if (n === 1) return { text: 'Demain', cls: 'soon' };
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const txt = new Date(y, m - 1, d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  return { text: n <= 7 ? `${txt} (dans ${n} j)` : txt, cls: n <= 3 ? 'soon' : '' };
+}
+function groupOf(t) {
+  if (t.done) return 'Terminées';
+  if (!t.due) return 'Sans date';
+  const n = daysUntil(t.due);
+  if (n < 0) return 'En retard';
+  if (n === 0) return "Aujourd'hui";
+  if (n <= 7) return 'Cette semaine';
+  return 'Plus tard';
+}
+const GROUP_ORDER = ['En retard', "Aujourd'hui", 'Cette semaine', 'Plus tard', 'Sans date', 'Terminées'];
+
+function sortTasks(a, b) {
+  if (a.done !== b.done) return a.done ? 1 : -1;
+  if (a.done && b.done) return (b.doneAt || 0) - (a.doneAt || 0);
+  if (a.due && b.due && a.due !== b.due) return a.due < b.due ? -1 : 1;
+  if (!!a.due !== !!b.due) return a.due ? -1 : 1;
+  if (PRIO_RANK[a.prio] !== PRIO_RANK[b.prio]) return PRIO_RANK[a.prio] - PRIO_RANK[b.prio];
+  return a.created - b.created;
+}
+
+function renderStats() {
+  const html = Object.entries(CATS).map(([key, c]) => {
+    const open = tasks.filter((t) => t.cat === key && !t.done);
+    const late = open.filter((t) => t.due && daysUntil(t.due) < 0).length;
+    const sub = late ? `<span style="color:var(--danger)">${late} en retard</span>` : `${open.filter(t => t.due && daysUntil(t.due) <= 7).length} cette semaine`;
+    return `<button class="stat cat-${key} ${filterCat === key ? 'active' : ''}" data-cat="${key}">
+      <div class="label"><span class="dot" style="background:var(--c)"></span><span class="ico">${c.icon}</span> ${c.label}</div>
+      <div class="num">${open.length}</div>
+      <div class="sub">${sub}</div>
+    </button>`;
+  }).join('');
+  $('stats').innerHTML = html;
+  $('stats').querySelectorAll('.stat').forEach((b) => b.onclick = () => {
+    filterCat = filterCat === b.dataset.cat ? 'all' : b.dataset.cat;
+    if (filterCat !== 'all') $('cat').value = filterCat;
+    render();
+  });
+}
+
+function renderList() {
+  const q = query.trim().toLowerCase();
+  const visible = tasks.filter((t) =>
+    (filterCat === 'all' || t.cat === filterCat) &&
+    (filterStatus === 'all' || (filterStatus === 'done') === t.done) &&
+    (!q || t.title.toLowerCase().includes(q) || (t.notes || '').toLowerCase().includes(q))
+  ).sort(sortTasks);
+
+  if (!visible.length) {
+    const msg = tasks.length === 0
+      ? 'Aucune tâche pour l’instant. Ajoute ta première ci-dessus 👆'
+      : filterStatus === 'todo' ? 'Rien à faire ici 🎉' : 'Aucune tâche trouvée.';
+    $('list').innerHTML = `<div class="empty">${msg}${filterCat !== 'all' ? `<br><small>Filtre : ${CATS[filterCat].label} — clique sur la carte pour l’enlever</small>` : ''}</div>`;
+    return;
+  }
+
+  const groups = {};
+  visible.forEach((t) => (groups[groupOf(t)] ||= []).push(t));
+  $('list').innerHTML = GROUP_ORDER.filter((g) => groups[g]).map((g) => `
+    <div class="group-title">${g} · ${groups[g].length}</div>
+    <ul class="tasks">${groups[g].map(taskHtml).join('')}</ul>`).join('');
+}
+
+function taskHtml(t) {
+  const c = CATS[t.cat];
+  const due = t.due ? dueLabel(t.due) : null;
+  return `<li class="task cat-${t.cat} ${t.done ? 'done' : ''}" data-id="${t.id}">
+    <button class="check" data-act="toggle" title="${t.done ? 'Marquer à faire' : 'Marquer terminée'}">${t.done ? '✓' : ''}</button>
+    <div>
+      <div class="t-title">${esc(t.title)}</div>
+      <div class="meta">
+        <span class="tag">${c.icon} ${c.label}</span>
+        ${due && !t.done ? `<span class="due ${due.cls}">📅 ${due.text}</span>` : ''}
+        ${t.prio === 'high' ? '<span class="prio-high">● Urgent</span>' : ''}
+        ${t.prio === 'low' ? '<span class="due">○ Basse</span>' : ''}
+      </div>
+      ${t.notes ? `<div class="notes">${esc(t.notes)}</div>` : ''}
+    </div>
+    <div class="actions">
+      <button class="icon" data-act="edit" title="Modifier">✎</button>
+      <button class="icon" data-act="del" title="Supprimer">🗑</button>
+    </div>
+  </li>`;
+}
+
+function render() { renderStats(); renderList(); }
+
+$('list').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.closest('li').dataset.id;
+  const t = tasks.find((x) => x.id === id);
+  if (btn.dataset.act === 'toggle') {
+    t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
+  } else if (btn.dataset.act === 'del') {
+    if (!confirm(`Supprimer « ${t.title} » ?`)) return;
+    tasks = tasks.filter((x) => x.id !== id);
+  } else if (btn.dataset.act === 'edit') {
+    editingId = id;
+    $('eTitle').value = t.title; $('eCat').value = t.cat; $('eDue').value = t.due || '';
+    $('ePrio').value = t.prio; $('eNotes').value = t.notes || '';
+    $('editDlg').showModal();
+    return;
+  }
+  save(); render();
+});
+
+$('editDlg').addEventListener('close', () => {
+  if ($('editDlg').returnValue !== 'save' || !editingId) return;
+  const t = tasks.find((x) => x.id === editingId);
+  Object.assign(t, {
+    title: $('eTitle').value.trim() || t.title, cat: $('eCat').value,
+    due: $('eDue').value || null, prio: $('ePrio').value, notes: $('eNotes').value.trim(),
+  });
+  editingId = null; save(); render();
+});
+
+$('addForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const title = $('title').value.trim();
+  if (!title) return;
+  tasks.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    title, cat: $('cat').value, due: $('due').value || null, prio: $('prio').value,
+    notes: $('notes').value.trim(), done: false, created: Date.now(),
+  });
+  $('title').value = ''; $('due').value = ''; $('prio').value = 'normal'; $('notes').value = '';
+  $('notes').hidden = true; $('moreToggle').textContent = '+ Ajouter une note';
+  if (filterStatus === 'done') setStatus('todo');
+  save(); render(); $('title').focus();
+});
+
+$('moreToggle').onclick = () => {
+  const ta = $('notes'); ta.hidden = !ta.hidden;
+  $('moreToggle').textContent = ta.hidden ? '+ Ajouter une note' : '− Masquer la note';
+  if (!ta.hidden) ta.focus();
+};
+
+function setStatus(v) {
+  filterStatus = v;
+  $('statusSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+}
+$('statusSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  setStatus(b.dataset.v); render();
+});
+$('search').addEventListener('input', (e) => { query = e.target.value; renderList(); });
+
+$('exportBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `mes-taches-${todayStr()}.json`; a.click();
+  URL.revokeObjectURL(a.href);
+};
+$('importBtn').onclick = () => $('importFile').click();
+$('importFile').onchange = async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data)) throw new Error();
+    const ids = new Set(tasks.map((t) => t.id));
+    const added = data.filter((t) => t && t.id && t.title && CATS[t.cat] && !ids.has(t.id));
+    tasks.push(...added); save(); render();
+    alert(`${added.length} tâche(s) importée(s).`);
+  } catch { alert('Fichier invalide.'); }
+  e.target.value = '';
+};
+$('clearDoneBtn').onclick = () => {
+  const n = tasks.filter((t) => t.done).length;
+  if (!n) return alert('Aucune tâche terminée.');
+  if (!confirm(`Supprimer ${n} tâche(s) terminée(s) ?`)) return;
+  tasks = tasks.filter((t) => !t.done); save(); render();
+};
+
+const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+$('today').textContent = now.charAt(0).toUpperCase() + now.slice(1);
+render();
+</script>
+</body>
+</html>
