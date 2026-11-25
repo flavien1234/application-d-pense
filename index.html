@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mes Dépenses</title>
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Dépenses">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="prevMonth" aria-label="Mois précédent">‹</button>
+    <h1 id="monthLabel">—</h1>
+    <button class="icon-btn" id="nextMonth" aria-label="Mois suivant">›</button>
+  </header>
+
+  <main class="layout">
+    <section class="summary card">
+      <div class="total-label">Total du mois</div>
+      <div class="total" id="monthTotal">0,00 €</div>
+      <div class="sub" id="monthSub"></div>
+      <div class="budget" id="budgetBox">
+        <div class="budget-bar"><div class="budget-fill" id="budgetFill"></div></div>
+        <div class="budget-text">
+          <span id="budgetText">Aucun budget défini</span>
+          <button class="link-btn" id="editBudget">Modifier</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card categories">
+      <h2>Par catégorie</h2>
+      <ul id="categoryList" class="cat-list"></ul>
+      <p class="empty" id="catEmpty">Aucune dépense ce mois-ci.</p>
+    </section>
+
+    <section class="card expenses">
+      <div class="expenses-head">
+        <h2>Dépenses</h2>
+        <select id="filterCat" aria-label="Filtrer par catégorie">
+          <option value="">Toutes</option>
+        </select>
+      </div>
+      <div id="expenseList"></div>
+      <p class="empty" id="listEmpty">Touchez « + » pour ajouter votre première dépense.</p>
+    </section>
+
+    <section class="card tools">
+      <h2>Sauvegarde</h2>
+      <p class="hint">Les données restent sur cet appareil. Exportez-les pour les sauvegarder ou les transférer entre iPhone et iPad.</p>
+      <div class="tool-row">
+        <button class="btn secondary" id="exportBtn">Exporter</button>
+        <label class="btn secondary">Importer
+          <input type="file" id="importInput" accept="application/json,.json" hidden>
+        </label>
+        <button class="btn secondary" id="csvBtn">Export CSV</button>
+      </div>
+    </section>
+  </main>
+
+  <button class="fab" id="addBtn" aria-label="Ajouter une dépense">+</button>
+
+  <dialog id="expenseDialog">
+    <form method="dialog" id="expenseForm">
+      <h3 id="dialogTitle">Nouvelle dépense</h3>
+      <label>Montant (€)
+        <input type="text" inputmode="decimal" id="fAmount" placeholder="0,00" required autocomplete="off">
+      </label>
+      <label>Catégorie</label>
+      <div class="cat-picker" id="catPicker"></div>
+      <label>Description
+        <input type="text" id="fNote" placeholder="Ex : courses Carrefour" maxlength="80" autocomplete="off">
+      </label>
+      <label>Date
+        <input type="date" id="fDate" required>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn danger" id="deleteBtn" hidden>Supprimer</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn secondary" id="cancelBtn">Annuler</button>
+        <button type="submit" class="btn primary" id="saveBtn">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="budgetDialog">
+    <form method="dialog" id="budgetForm">
+      <h3>Budget mensuel</h3>
+      <label>Montant (€) — laissez vide pour aucun budget
+        <input type="text" inputmode="decimal" id="fBudget" placeholder="Ex : 1500" autocomplete="off">
+      </label>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button type="button" class="btn secondary" id="budgetCancel">Annuler</button>
+        <button type="submit" class="btn primary">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
